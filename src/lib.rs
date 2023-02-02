@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::process::ExitCode;
 
@@ -12,6 +13,7 @@ pub fn show_args(args: &[String]) -> () {
 pub struct Config {
     search: String,
     file_path: String,
+    ignore_case: bool,
 }
 
 impl Config {
@@ -23,9 +25,12 @@ impl Config {
             // show_args(&args);
             Err("ERROR: Not enough arguments - need: 'search string' 'file'")
         } else {
+            let ignore_case = env::var("NC").is_ok();
+
             Ok(Config {
                 search: args[1].clone(),
                 file_path: args[2].clone(),
+                ignore_case,
             })
         }
     }
@@ -36,22 +41,38 @@ pub fn do_grep(config: Config) -> ExitCode {
 
     match file_contents {
         Err(_) => {
-            println!("ERROR: Unable to read file '{}'", &config.file_path);
+            eprintln!("ERROR: Unable to read file '{}'", &config.file_path);
             ExitCode::FAILURE
         }
+
         Ok(file_contents) => {
             // println!("{}\n{}", config.file_path, file_contents);
-            let result = search_for(&config.search, &file_contents);
+            let result = if config.ignore_case {
+                search_for_nc(&config.search, &file_contents)
+            } else {
+                search_for(&config.search, &file_contents)
+            };
+
             if result.len() > 0 {
                 result.into_iter().for_each(|line| println!("{line}"));
+                ExitCode::SUCCESS
+            } else {
+                ExitCode::FAILURE
             }
-            ExitCode::SUCCESS
         }
     }
 }
 
 pub fn search_for<'a>(search: &str, contents: &'a str) -> Vec<&'a str> {
     Vec::from_iter(contents.lines().filter(|line| line.contains(search)))
+}
+
+pub fn search_for_nc<'a>(search: &str, contents: &'a str) -> Vec<&'a str> {
+    Vec::from_iter(
+        contents
+            .lines()
+            .filter(|line| line.to_lowercase().contains(&search.to_lowercase())),
+    )
 }
 
 #[cfg(test)]

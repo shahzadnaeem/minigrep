@@ -34,3 +34,13 @@ fn two_lines() {
         search_for(search, INPUT)
     );
 }
+
+#[test]
+fn single_line_nc() {
+    let search = "TROve";
+
+    assert_eq!(
+        vec!["4. not so controversial"],
+        search_for_nc(search, INPUT)
+    );
+}

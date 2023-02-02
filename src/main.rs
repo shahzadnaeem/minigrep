@@ -10,7 +10,7 @@ fn main() -> ExitCode {
 
     match config {
         Err(err_msg) => {
-            println!("{err_msg}");
+            eprintln!("{err_msg}");
             ExitCode::from(ExitCode::FAILURE)
         }
         Ok(config) => ExitCode::from(minigrep::do_grep(config)),
